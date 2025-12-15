@@ -81,7 +81,7 @@ class Availability
             'available_date' => $data['available_date'],
             'start_time' => $data['start_time'],
             'end_time' => $data['end_time'],
-            'is_recurring' => $data['is_recurring'] ?? false,
+            'is_recurring' => isset($data['is_recurring']) ? (int)$data['is_recurring'] : 0,
             'recurring_day' => $data['recurring_day'] ?? null,
         ]);
     }
@@ -118,7 +118,7 @@ class Availability
     {
         return $this->db->update(
             $this->table,
-            ['is_booked' => true],
+            ['is_booked' => 1],
             'id = ?',
             [$id]
         );
@@ -128,7 +128,7 @@ class Availability
     {
         return $this->db->update(
             $this->table,
-            ['is_booked' => false],
+            ['is_booked' => 0],
             'id = ?',
             [$id]
         );

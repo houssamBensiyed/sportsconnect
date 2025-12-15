@@ -81,7 +81,11 @@ class Router
 
                 // Execute controller
                 [$controllerClass, $action] = $route['handler'];
-                $controllerClass = "App\\Controllers\\{$controllerClass}";
+                
+                // If controller class doesn't exist, try prepending namespace
+                if (!class_exists($controllerClass)) {
+                    $controllerClass = "App\\Controllers\\{$controllerClass}";
+                }
 
                 if (!class_exists($controllerClass)) {
                     Response::error('Controller not found', 500);

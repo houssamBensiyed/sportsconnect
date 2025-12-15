@@ -27,14 +27,14 @@ class AuthMiddleware
         }
 
         try {
-            $secret = $_ENV['JWT_SECRET'];
+            $secret = $_ENV['JWT_SECRET'] ?? 'default_secret_key_please_change';
             $decoded = JWT::decode($token, new Key($secret, 'HS256'));
 
             // Get user from database
             $db = Database::getInstance();
             $user = $db->fetch(
                 "SELECT id, email, role, is_active FROM users WHERE id = ?",
-                [$decoded->user_id]
+                [$decoded->sub]
             );
 
             if (!$user || !$user['is_active']) {
