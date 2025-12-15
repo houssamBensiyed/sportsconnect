@@ -66,7 +66,7 @@ $sportName = 'Test Sport ' . time();
 echo "Creating Sport ($sportName)... ";
 $sportId = $sportModel->create([
     'name' => $sportName,
-    'category' => 'collectif'
+    'category' => 'sports_collectifs'
 ]);
 
 if ($sportId) {
