@@ -1,0 +1,9 @@
+/vendor
+/.idea
+/.vscode
+.env
+/logs/*.log
+/docker/dbdata
+/uploads/*
+!/uploads/.gitkeep
+.DS_Store
