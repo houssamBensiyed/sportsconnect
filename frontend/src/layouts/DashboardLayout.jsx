@@ -70,7 +70,7 @@ const DashboardLayout = () => {
                     <div className="user-avatar">
                         {user?.profile?.profile_photo ? (
                             <img
-                                src={`http://localhost:8000/uploads/profiles/${user.profile.profile_photo}`}
+                                src={`http://localhost:8080/uploads/profiles/${user.profile.profile_photo}`}
                                 alt="Profile"
                             />
                         ) : (

@@ -167,7 +167,7 @@ const Coaches = () => {
 const CoachCard = ({ coach }) => {
     const getImageUrl = (photo) => {
         if (!photo) return null;
-        return `http://localhost:8000/uploads/profiles/${photo}`;
+        return `http://localhost:8080/uploads/profiles/${photo}`;
     };
 
     return (
