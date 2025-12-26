@@ -1,138 +1,81 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
-import { ENDPOINTS } from '../../config/api';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { Save } from 'lucide-react';
 import toast from 'react-hot-toast';
-import '../coach/Dashboard.css';
-import '../coach/Settings.css';
 
 const SportifSettings = () => {
-    const { user, checkAuth } = useAuth();
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
-        phone: '',
-        birth_date: '',
-        city: '',
-        address: '',
+        phone: ''
     });
-    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (user?.profile) {
-            setFormData({
-                first_name: user.profile.first_name || '',
-                last_name: user.profile.last_name || '',
-                phone: user.profile.phone || '',
-                birth_date: user.profile.birth_date || '',
-                city: user.profile.city || '',
-                address: user.profile.address || '',
-            });
-        }
+        setFormData({
+            first_name: user?.first_name || '',
+            last_name: user?.last_name || '',
+            phone: user?.phone || ''
+        });
     }, [user]);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    useGSAP(() => {
+        gsap.from("form", {
+            y: 20,
+            opacity: 0,
+            duration: 0.6,
+            ease: "expo.out"
+        });
+    }, []);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setLoading(true);
-        try {
-            await api.put(ENDPOINTS.SPORTIFS.UPDATE_PROFILE, formData);
-            toast.success('Profil mis à jour !');
-            checkAuth();
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour');
-        } finally {
-            setLoading(false);
-        }
+        toast.success('Profil mis à jour');
     };
 
     return (
-        <div className="settings-page animate-fade-in">
-            <h1>Paramètres</h1>
-            <p className="page-subtitle">Gérez votre profil</p>
+        <div className="max-w-2xl mx-auto">
+            <h1 className="text-4xl font-bold text-white tracking-tighter mb-8">PARAMÈTRES.</h1>
 
-            <form onSubmit={handleSubmit} className="settings-form card">
-                <h2>Informations personnelles</h2>
-
-                <div className="form-row">
-                    <div className="form-group">
-                        <label className="form-label">Prénom</label>
+            <form onSubmit={handleSubmit} className="border border-zinc-800 bg-black p-8 space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Prénom</label>
                         <input
                             type="text"
-                            name="first_name"
                             value={formData.first_name}
-                            onChange={handleChange}
-                            className="form-input"
+                            onChange={e => setFormData({ ...formData, first_name: e.target.value })}
+                            className="w-full bg-black border border-zinc-800 text-white p-3 focus:border-white outline-none transition-colors"
                         />
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">Nom</label>
+                    <div>
+                        <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Nom</label>
                         <input
                             type="text"
-                            name="last_name"
                             value={formData.last_name}
-                            onChange={handleChange}
-                            className="form-input"
+                            onChange={e => setFormData({ ...formData, last_name: e.target.value })}
+                            className="w-full bg-black border border-zinc-800 text-white p-3 focus:border-white outline-none transition-colors"
                         />
                     </div>
                 </div>
 
-                <div className="form-row">
-                    <div className="form-group">
-                        <label className="form-label">Téléphone</label>
-                        <input
-                            type="tel"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            className="form-input"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Date de naissance</label>
-                        <input
-                            type="date"
-                            name="birth_date"
-                            value={formData.birth_date}
-                            onChange={handleChange}
-                            className="form-input"
-                        />
-                    </div>
+                <div>
+                    <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Téléphone</label>
+                    <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full bg-black border border-zinc-800 text-white p-3 focus:border-white outline-none transition-colors"
+                    />
                 </div>
 
-                <div className="form-row">
-                    <div className="form-group">
-                        <label className="form-label">Ville</label>
-                        <input
-                            type="text"
-                            name="city"
-                            value={formData.city}
-                            onChange={handleChange}
-                            className="form-input"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Adresse</label>
-                        <input
-                            type="text"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            className="form-input"
-                        />
-                    </div>
+                <div className="pt-4">
+                    <button type="submit" className="w-full py-4 bg-white text-black font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
+                        <Save size={18} /> Enregistrer
+                    </button>
                 </div>
-
-                <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={loading}
-                >
-                    {loading ? 'Enregistrement...' : 'Enregistrer les modifications'}
-                </button>
             </form>
         </div>
     );

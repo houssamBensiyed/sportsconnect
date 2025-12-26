@@ -1,210 +1,135 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { FiMail, FiLock, FiUser, FiPhone, FiEye, FiEyeOff } from 'react-icons/fi';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import './Auth.css';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-        confirmPassword: '',
-        role: 'sportif',
         first_name: '',
         last_name: '',
-        phone: '',
+        email: '',
+        password: '',
+        role: 'sportif',
     });
-    const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
     const { register } = useAuth();
     const navigate = useNavigate();
+    const formRef = useRef(null);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    useGSAP(() => {
+        gsap.from(formRef.current.querySelectorAll('.form-item'), {
+            y: 30,
+            opacity: 0,
+            duration: 0.5,
+            stagger: 0.08,
+            ease: "expo.out"
+        });
+    }, { scope: formRef });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (formData.password !== formData.confirmPassword) {
-            toast.error('Les mots de passe ne correspondent pas');
-            return;
-        }
-
-        if (formData.password.length < 8) {
-            toast.error('Le mot de passe doit contenir au moins 8 caractères');
-            return;
-        }
-
-        setLoading(true);
-
         try {
-            const user = await register({
-                email: formData.email,
-                password: formData.password,
-                role: formData.role,
-                first_name: formData.first_name,
-                last_name: formData.last_name,
-                phone: formData.phone,
-            });
-            toast.success('Inscription réussie !');
-            navigate(user.role === 'coach' ? '/coach/dashboard' : '/sportif/dashboard');
+            await register(formData);
+            toast.success('Compte créé');
+            navigate('/login');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Erreur lors de l\'inscription');
-        } finally {
-            setLoading(false);
+            toast.error('Erreur lors de l\'inscription');
         }
     };
 
     return (
-        <div className="auth-page">
-            <div className="container">
-                <div className="auth-card glass animate-fade-in">
-                    <div className="auth-header">
-                        <h1>Inscription</h1>
-                        <p>Créez votre compte et commencez votre aventure.</p>
-                    </div>
+        <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-black">
+            {/* Left - Visual */}
+            <div className="hidden lg:flex items-center justify-center bg-zinc-900 border-r border-zinc-800 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center grayscale opacity-50" />
+                <div className="relative z-10 text-center">
+                    <div className="text-[120px] font-bold text-white leading-none tracking-tighter mix-blend-difference">JOIN</div>
+                    <div className="text-[120px] font-bold text-white leading-none tracking-tighter mix-blend-difference">ELITE</div>
+                </div>
+            </div>
 
-                    <div className="role-selector">
-                        <button
-                            type="button"
-                            className={`role-btn ${formData.role === 'sportif' ? 'active' : ''}`}
-                            onClick={() => setFormData({ ...formData, role: 'sportif' })}
-                        >
-                            <span className="role-icon">🏃</span>
-                            <span>Je suis Sportif</span>
-                        </button>
-                        <button
-                            type="button"
-                            className={`role-btn ${formData.role === 'coach' ? 'active' : ''}`}
-                            onClick={() => setFormData({ ...formData, role: 'coach' })}
-                        >
-                            <span className="role-icon">👨‍🏫</span>
-                            <span>Je suis Coach</span>
-                        </button>
-                    </div>
+            {/* Right - Form */}
+            <div ref={formRef} className="flex items-center justify-center p-8 lg:p-16">
+                <div className="w-full max-w-md">
+                    <h1 className="form-item text-4xl font-bold text-white tracking-tighter mb-8">INSCRIPTION.</h1>
 
-                    <form onSubmit={handleSubmit} className="auth-form">
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label className="form-label">Prénom</label>
-                                <div className="input-icon">
-                                    <FiUser className="icon" />
-                                    <input
-                                        type="text"
-                                        name="first_name"
-                                        value={formData.first_name}
-                                        onChange={handleChange}
-                                        placeholder="Jean"
-                                        className="form-input"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Nom</label>
-                                <div className="input-icon">
-                                    <FiUser className="icon" />
-                                    <input
-                                        type="text"
-                                        name="last_name"
-                                        value={formData.last_name}
-                                        onChange={handleChange}
-                                        placeholder="Dupont"
-                                        className="form-input"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Email</label>
-                            <div className="input-icon">
-                                <FiMail className="icon" />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="form-item grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Prénom</label>
                                 <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="votre@email.com"
-                                    className="form-input"
+                                    type="text"
+                                    value={formData.first_name}
+                                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                                    className="w-full bg-black border border-zinc-800 text-white p-4 focus:border-white outline-none transition-colors"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Nom</label>
+                                <input
+                                    type="text"
+                                    value={formData.last_name}
+                                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                                    className="w-full bg-black border border-zinc-800 text-white p-4 focus:border-white outline-none transition-colors"
                                     required
                                 />
                             </div>
                         </div>
 
-                        <div className="form-group">
-                            <label className="form-label">Téléphone (optionnel)</label>
-                            <div className="input-icon">
-                                <FiPhone className="icon" />
-                                <input
-                                    type="tel"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    placeholder="06 12 34 56 78"
-                                    className="form-input"
-                                />
-                            </div>
+                        <div className="form-item">
+                            <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Email</label>
+                            <input
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                className="w-full bg-black border border-zinc-800 text-white p-4 focus:border-white outline-none transition-colors"
+                                required
+                            />
                         </div>
 
-                        <div className="form-group">
-                            <label className="form-label">Mot de passe</label>
-                            <div className="input-icon">
-                                <FiLock className="icon" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="Min. 8 caractères"
-                                    className="form-input"
-                                    required
-                                />
+                        <div className="form-item">
+                            <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Mot de passe</label>
+                            <input
+                                type="password"
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                className="w-full bg-black border border-zinc-800 text-white p-4 focus:border-white outline-none transition-colors"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-item">
+                            <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Je suis</label>
+                            <div className="grid grid-cols-2 gap-4">
                                 <button
                                     type="button"
-                                    className="toggle-password"
-                                    onClick={() => setShowPassword(!showPassword)}
+                                    onClick={() => setFormData({ ...formData, role: 'sportif' })}
+                                    className={`p-4 border text-sm uppercase tracking-wider font-bold transition-all ${formData.role === 'sportif' ? 'bg-white text-black border-white' : 'bg-black text-zinc-500 border-zinc-800'
+                                        }`}
                                 >
-                                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                                    Sportif
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, role: 'coach' })}
+                                    className={`p-4 border text-sm uppercase tracking-wider font-bold transition-all ${formData.role === 'coach' ? 'bg-white text-black border-white' : 'bg-black text-zinc-500 border-zinc-800'
+                                        }`}
+                                >
+                                    Coach
                                 </button>
                             </div>
                         </div>
 
-                        <div className="form-group">
-                            <label className="form-label">Confirmer le mot de passe</label>
-                            <div className="input-icon">
-                                <FiLock className="icon" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    placeholder="Confirmez votre mot de passe"
-                                    className="form-input"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="btn btn-primary btn-lg w-full"
-                            disabled={loading}
-                        >
-                            {loading ? 'Inscription...' : 'Créer mon Compte'}
+                        <button type="submit" className="form-item w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2">
+                            Créer mon compte
                         </button>
                     </form>
 
-                    <div className="auth-footer">
-                        <p>
-                            Déjà un compte ?{' '}
-                            <Link to="/login">Se connecter</Link>
-                        </p>
-                    </div>
+                    <p className="form-item mt-8 text-center text-zinc-500 text-sm">
+                        Déjà un compte ? <Link to="/login" className="text-white hover:underline underline-offset-4">Connexion</Link>
+                    </p>
                 </div>
             </div>
         </div>

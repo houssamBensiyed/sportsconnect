@@ -1,0 +1,2 @@
+[22-Dec-2025 09:03:37 UTC] Registration error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'bocikyxafo@mailinator.com' for key 'users.email'
+[22-Dec-2025 09:04:20 UTC] Registration error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'zezuhu@mailinator.com' for key 'users.email'

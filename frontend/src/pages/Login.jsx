@@ -1,109 +1,85 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import './Auth.css';
+import { ArrowRight } from 'lucide-react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
 
 const Login = () => {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-    });
-    const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+    const formRef = useRef(null);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    useGSAP(() => {
+        gsap.from(formRef.current.querySelectorAll('.form-item'), {
+            y: 30,
+            opacity: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            ease: "expo.out"
+        });
+    }, { scope: formRef });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-
         try {
-            const user = await login(formData.email, formData.password);
-            toast.success('Connexion réussie !');
-            navigate(user.role === 'coach' ? '/coach/dashboard' : '/sportif/dashboard');
+            await login(email, password);
+            toast.success('Connexion réussie');
+            navigate('/');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Erreur de connexion');
-        } finally {
-            setLoading(false);
+            toast.error('Identifiants invalides');
         }
     };
 
     return (
-        <div className="auth-page">
-            <div className="container">
-                <div className="auth-card glass animate-fade-in">
-                    <div className="auth-header">
-                        <h1>Connexion</h1>
-                        <p>Bienvenue ! Connectez-vous à votre compte.</p>
-                    </div>
+        <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-black">
+            {/* Left - Form */}
+            <div ref={formRef} className="flex items-center justify-center p-8 lg:p-16 border-r border-zinc-900">
+                <div className="w-full max-w-md">
+                    <h1 className="form-item text-4xl font-bold text-white tracking-tighter mb-2">LOGIN.</h1>
+                    <p className="form-item text-zinc-500 mb-8">Accédez à votre espace performance.</p>
 
-                    <form onSubmit={handleSubmit} className="auth-form">
-                        <div className="form-group">
-                            <label className="form-label">Email</label>
-                            <div className="input-icon">
-                                <FiMail className="icon" />
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="votre@email.com"
-                                    className="form-input"
-                                    required
-                                />
-                            </div>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="form-item">
+                            <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Email</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full bg-black border border-zinc-800 text-white p-4 focus:border-white outline-none transition-colors"
+                                required
+                            />
+                        </div>
+                        <div className="form-item">
+                            <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Mot de passe</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-black border border-zinc-800 text-white p-4 focus:border-white outline-none transition-colors"
+                                required
+                            />
                         </div>
 
-                        <div className="form-group">
-                            <label className="form-label">Mot de passe</label>
-                            <div className="input-icon">
-                                <FiLock className="icon" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="••••••••"
-                                    className="form-input"
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    className="toggle-password"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? <FiEyeOff /> : <FiEye />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="auth-options">
-                            <Link to="/forgot-password" className="forgot-link">
-                                Mot de passe oublié ?
-                            </Link>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="btn btn-primary btn-lg w-full"
-                            disabled={loading}
-                        >
-                            {loading ? 'Connexion...' : 'Se Connecter'}
+                        <button type="submit" className="form-item w-full py-4 bg-white text-black font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
+                            Se connecter <ArrowRight size={16} />
                         </button>
                     </form>
 
-                    <div className="auth-footer">
-                        <p>
-                            Pas encore de compte ?{' '}
-                            <Link to="/register">Créer un compte</Link>
-                        </p>
-                    </div>
+                    <p className="form-item mt-8 text-center text-zinc-500 text-sm">
+                        Pas encore membre ? <Link to="/register" className="text-white hover:underline underline-offset-4">Inscription</Link>
+                    </p>
+                </div>
+            </div>
+
+            {/* Right - Visual */}
+            <div className="hidden lg:flex items-center justify-center bg-zinc-900 border-l border-zinc-800 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center grayscale opacity-50" />
+                <div className="relative z-10 text-center">
+                    <div className="text-[120px] font-bold text-white leading-none tracking-tighter mix-blend-difference">FOCUS</div>
                 </div>
             </div>
         </div>

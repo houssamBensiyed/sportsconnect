@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Coaches from './pages/Coaches';
 import CoachProfile from './pages/CoachProfile';
+import PageTransition from './components/PageTransition';
 
 // Protected Pages
 import CoachDashboard from './pages/coach/Dashboard';
@@ -31,8 +32,8 @@ const ProtectedRoute = ({ children, role }) => {
 
   if (loading) {
     return (
-      <div className="loading-container" style={{ minHeight: '100vh' }}>
-        <div className="spinner"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
@@ -55,16 +56,16 @@ function AppRoutes() {
     <Routes>
       {/* Public Routes */}
       <Route element={<MainLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/coaches" element={<Coaches />} />
-        <Route path="/coaches/:id" element={<CoachProfile />} />
+        <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+        <Route path="/coaches" element={<PageTransition><Coaches /></PageTransition>} />
+        <Route path="/coaches/:id" element={<PageTransition><CoachProfile /></PageTransition>} />
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate to={user?.role === 'coach' ? '/coach/dashboard' : '/sportif/dashboard'} /> : <Login />}
+          element={isAuthenticated ? <Navigate to={user?.role === 'coach' ? '/coach/dashboard' : '/sportif/dashboard'} /> : <PageTransition><Login /></PageTransition>}
         />
         <Route
           path="/register"
-          element={isAuthenticated ? <Navigate to={user?.role === 'coach' ? '/coach/dashboard' : '/sportif/dashboard'} /> : <Register />}
+          element={isAuthenticated ? <Navigate to={user?.role === 'coach' ? '/coach/dashboard' : '/sportif/dashboard'} /> : <PageTransition><Register /></PageTransition>}
         />
       </Route>
 
@@ -74,10 +75,10 @@ function AppRoutes() {
           <DashboardLayout />
         </ProtectedRoute>
       }>
-        <Route path="dashboard" element={<CoachDashboard />} />
-        <Route path="availabilities" element={<CoachAvailabilities />} />
-        <Route path="reservations" element={<CoachReservations />} />
-        <Route path="settings" element={<CoachSettings />} />
+        <Route path="dashboard" element={<PageTransition><CoachDashboard /></PageTransition>} />
+        <Route path="availabilities" element={<PageTransition><CoachAvailabilities /></PageTransition>} />
+        <Route path="reservations" element={<PageTransition><CoachReservations /></PageTransition>} />
+        <Route path="settings" element={<PageTransition><CoachSettings /></PageTransition>} />
       </Route>
 
       {/* Sportif Routes */}
@@ -86,9 +87,9 @@ function AppRoutes() {
           <DashboardLayout />
         </ProtectedRoute>
       }>
-        <Route path="dashboard" element={<SportifDashboard />} />
-        <Route path="reservations" element={<SportifReservations />} />
-        <Route path="settings" element={<SportifSettings />} />
+        <Route path="dashboard" element={<PageTransition><SportifDashboard /></PageTransition>} />
+        <Route path="reservations" element={<PageTransition><SportifReservations /></PageTransition>} />
+        <Route path="settings" element={<PageTransition><SportifSettings /></PageTransition>} />
       </Route>
 
       {/* Fallback */}

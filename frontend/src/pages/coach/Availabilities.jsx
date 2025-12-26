@@ -1,191 +1,146 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
-import { FiPlus, FiTrash2, FiCalendar } from 'react-icons/fi';
-import { format, addDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import '../coach/Dashboard.css';
-import './Availabilities.css';
+import { Plus, X, Calendar } from 'lucide-react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { format, addDays, startOfWeek } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const CoachAvailabilities = () => {
     const [availabilities, setAvailabilities] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({
-        date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
-        start_time: '09:00',
-        end_time: '10:00',
-    });
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [newSlot, setNewSlot] = useState({ start_time: '', end_time: '' });
 
-    useEffect(() => {
-        fetchAvailabilities();
-    }, []);
+    useGSAP(() => {
+        gsap.from(".availability-card", {
+            y: 20,
+            opacity: 0,
+            duration: 0.4,
+            stagger: 0.05,
+            ease: "expo.out"
+        });
+    }, [availabilities]);
 
     const fetchAvailabilities = async () => {
         try {
-            const response = await api.get(ENDPOINTS.AVAILABILITIES.LIST);
-            setAvailabilities(response.data.data || []);
+            // In a real app, filtering by date would be here
+            const res = await api.get(ENDPOINTS.AVAILABILITIES.LIST);
+            setAvailabilities(res.data.data || []);
         } catch (error) {
-            console.error('Error fetching availabilities:', error);
-        } finally {
-            setLoading(false);
+            console.error(error);
         }
     };
 
-    const handleSubmit = async (e) => {
+    useEffect(() => {
+        fetchAvailabilities();
+    }, [selectedDate]);
+
+    const handleAdd = async (e) => {
         e.preventDefault();
         try {
-            await api.post(ENDPOINTS.AVAILABILITIES.CREATE, formData);
-            toast.success('Créneau créé !');
-            setShowModal(false);
+            await api.post(ENDPOINTS.AVAILABILITIES.CREATE, {
+                ...newSlot,
+                available_date: selectedDate
+            });
+            toast.success('Créneau ajouté');
             fetchAvailabilities();
+            setNewSlot({ start_time: '', end_time: '' });
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Erreur lors de la création');
+            toast.error('Erreur ajout');
         }
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('Supprimer ce créneau ?')) return;
         try {
             await api.delete(ENDPOINTS.AVAILABILITIES.DELETE(id));
-            toast.success('Créneau supprimé');
+            toast.success('Supprimé');
             fetchAvailabilities();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Erreur lors de la suppression');
+            toast.error('Erreur suppression');
         }
     };
 
-    // Group availabilities by date
-    const groupedAvailabilities = availabilities.reduce((acc, slot) => {
-        const date = slot.available_date;
-        if (!acc[date]) acc[date] = [];
-        acc[date].push(slot);
-        return acc;
-    }, {});
-
-    if (loading) {
-        return (
-            <div className="loading-container">
-                <div className="spinner"></div>
-            </div>
-        );
-    }
-
     return (
-        <div className="availabilities-page animate-fade-in">
-            <div className="page-header-actions">
-                <div>
-                    <h1>Mes Disponibilités</h1>
-                    <p>Gérez vos créneaux de disponibilité</p>
-                </div>
-                <button onClick={() => setShowModal(true)} className="btn btn-primary">
-                    <FiPlus /> Ajouter un créneau
-                </button>
-            </div>
+        <div className="max-w-5xl mx-auto">
+            <h1 className="text-4xl font-bold text-white tracking-tighter mb-8">DISPONIBILITÉS.</h1>
 
-            {Object.keys(groupedAvailabilities).length > 0 ? (
-                <div className="availability-list">
-                    {Object.entries(groupedAvailabilities)
-                        .sort(([a], [b]) => new Date(a) - new Date(b))
-                        .map(([date, slots]) => (
-                            <div key={date} className="availability-group card">
-                                <div className="group-header">
-                                    <FiCalendar />
-                                    <span>{format(new Date(date), 'EEEE d MMMM yyyy', { locale: fr })}</span>
-                                </div>
-                                <div className="slots-grid">
-                                    {slots
-                                        .sort((a, b) => a.start_time.localeCompare(b.start_time))
-                                        .map((slot) => (
-                                            <div
-                                                key={slot.id}
-                                                className={`slot-item ${slot.is_booked ? 'booked' : ''}`}
-                                            >
-                                                <span className="slot-time">
-                                                    {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
-                                                </span>
-                                                {slot.is_booked ? (
-                                                    <span className="slot-status">Réservé</span>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleDelete(slot.id)}
-                                                        className="slot-delete"
-                                                        title="Supprimer"
-                                                    >
-                                                        <FiTrash2 size={16} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                </div>
-                            </div>
-                        ))}
-                </div>
-            ) : (
-                <div className="empty-state card">
-                    <FiCalendar size={48} />
-                    <h3>Aucune disponibilité</h3>
-                    <p>Ajoutez des créneaux pour recevoir des réservations</p>
-                    <button onClick={() => setShowModal(true)} className="btn btn-primary">
-                        <FiPlus /> Ajouter un créneau
-                    </button>
-                </div>
-            )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Add Form */}
+                <div className="border border-zinc-800 bg-black p-8">
+                    <h2 className="text-xl font-bold text-white tracking-tight mb-6 flex items-center gap-2">
+                        <Plus size={20} /> AJOUTER
+                    </h2>
 
-            {/* Modal */}
-            {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal card" onClick={(e) => e.stopPropagation()}>
-                        <h2>Nouveau créneau</h2>
-                        <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label className="form-label">Date</label>
+                    <form onSubmit={handleAdd} className="space-y-6">
+                        <div>
+                            <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Date</label>
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="w-full bg-black border border-zinc-800 text-white p-3 focus:border-white outline-none transition-colors appearance-none"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Début</label>
                                 <input
-                                    type="date"
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                    min={format(addDays(new Date(), 1), 'yyyy-MM-dd')}
-                                    className="form-input"
-                                    required
+                                    type="time"
+                                    value={newSlot.start_time}
+                                    onChange={(e) => setNewSlot({ ...newSlot, start_time: e.target.value })}
+                                    className="w-full bg-black border border-zinc-800 text-white p-3 focus:border-white outline-none transition-colors appearance-none"
                                 />
                             </div>
-
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label className="form-label">Début</label>
-                                    <input
-                                        type="time"
-                                        value={formData.start_time}
-                                        onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                                        className="form-input"
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Fin</label>
-                                    <input
-                                        type="time"
-                                        value={formData.end_time}
-                                        onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                                        className="form-input"
-                                        required
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-xs font-mono text-zinc-500 uppercase mb-2">Fin</label>
+                                <input
+                                    type="time"
+                                    value={newSlot.end_time}
+                                    onChange={(e) => setNewSlot({ ...newSlot, end_time: e.target.value })}
+                                    className="w-full bg-black border border-zinc-800 text-white p-3 focus:border-white outline-none transition-colors appearance-none"
+                                />
                             </div>
+                        </div>
+                        <button type="submit" className="w-full py-4 bg-white text-black font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors">
+                            Confirmer
+                        </button>
+                    </form>
+                </div>
 
-                            <div className="modal-actions">
-                                <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">
-                                    Annuler
-                                </button>
-                                <button type="submit" className="btn btn-primary">
-                                    Créer
-                                </button>
+                {/* List */}
+                <div className="lg:col-span-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {availabilities.filter(a => a.available_date === selectedDate).length > 0 ? (
+                            availabilities
+                                .filter(a => a.available_date === selectedDate)
+                                .map((slot) => (
+                                    <div key={slot.id} className="availability-card p-6 border border-zinc-800 bg-black flex justify-between items-center group hover:border-zinc-600 transition-colors">
+                                        <div>
+                                            <p className="text-2xl font-bold text-white tracking-tight">
+                                                {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
+                                            </p>
+                                            <p className="text-xs font-mono text-zinc-500 uppercase flex items-center gap-1 mt-1">
+                                                <Calendar size={12} /> {format(new Date(slot.available_date), 'dd/MM/yyyy')}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => handleDelete(slot.id)}
+                                            className="w-10 h-10 flex items-center justify-center border border-zinc-800 text-zinc-500 hover:text-red-500 hover:border-red-500 hover:bg-black transition-all"
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                ))
+                        ) : (
+                            <div className="col-span-full py-12 text-center border border-zinc-800 border-dashed">
+                                <p className="text-zinc-500">Aucun créneau pour cette date.</p>
                             </div>
-                        </form>
+                        )}
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

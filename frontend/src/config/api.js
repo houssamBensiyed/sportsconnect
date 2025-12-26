@@ -67,8 +67,11 @@ export const ENDPOINTS = {
         REFUSE: (id) => `/reservations/${id}/refuse`,
         COMPLETE: (id) => `/reservations/${id}/complete`,
         COACH: '/reservations/coach',
+        TEACHER: '/reservations/coach',
+        STUDENT: '/sportifs/reservations',
         PENDING: '/reservations/pending',
         TODAY: '/reservations/today',
+        UPDATE_STATUS: (id) => `/reservations/${id}/status`,
     },
 
     // Reviews
